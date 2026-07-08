@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chronicles of Antiquity: Born into Society</title>
+    <style>
+        :root {
+            --primary-color: #8b263e; /* Roman Crimson */
+            --secondary-color: #d4af37; /* Grecian Gold */
+            --bg-color: #f7f4eb; /* Aged Parchment */
+            --dark-color: #2b2625;
+            --light-card: #ffffff;
+            --shadow: 0 4px 15px rgba(0,0,0,0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--dark-color);
+            line-height: 1.6;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        header {
+            width: 100%;
+            max-width: 850px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: var(--light-card);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+            border-left: 5px solid var(--primary-color);
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+        }
+
+        /* Audio Toggle Styling */
+        .audio-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .switch input { display: none; }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider { background-color: var(--primary-color); }
+        input:checked + .slider:before { transform: translateX(26px); }
+
+        /* Game Window Container */
+        #game-window {
+            width: 100%;
+            max-width: 850px;
+            background: var(--light-card);
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            padding: 30px;
+            min-height: 450px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .screen { display: none; }
+        .screen.active { display: flex; flex-direction: column; animation: fadeIn 0.5s ease; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Typography & Components */
+        p { margin-bottom: 20px; font-size: 1.1rem; color: #4a4a4a; }
+        .center-content { text-align: center; align-items: center; }
+
+        .btn-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .btn-grid { grid-template-columns: 1fr; }
+        }
+
+        button {
+            background-color: var(--light-card);
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+            padding: 12px 24px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        button:hover {
+            background-color: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        button.primary-btn {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        button.primary-btn:hover {
+            background-color: #6b1d30;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            background: #fdfaf2;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #e2daf0;
+            font-weight: bold;
+        }
+
+        .stat { display: flex; align-items: center; gap: 5px; }
+
+        /* The Wheel of Fate styling */
+        .wheel-container {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            margin: 20px auto;
+        }
+
+        .wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 8px solid var(--dark-color);
+            position: relative;
+            overflow: hidden;
+            transition: transform 3s cubic-bezier(0.1, 0.8, 0.3, 1);
+            background: conic-gradient(
+                #ef476f 0% 25%, 
+                #ffd166 25% 50%, 
+                #06d6a0 50% 75%, 
+                #118ab2 75% 100%
+            );
+        }
+
+        .wheel-pointer {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0; height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 25px solid var(--primary-color);
+            z-index: 10;
+        }
+
+        /* Hidden History Modals */
+        .history-card-trigger {
+            background: #eef1f6;
+            border: 1px dashed #adbad4;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
+            color: #384d6b;
+        }
+        .history-card-trigger:hover { background: #e2e8f0; }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .modal-content {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: var(--shadow);
+            border-top: 6px solid var(--secondary-color);
+            position: relative;
+        }
+        .close-modal {
+            position: absolute;
+            top: 10px; right: 15px;
+            font-size: 1.5rem; cursor: pointer;
+        }
+
+        /* User Response Box */
+        textarea {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🏛️ Chronicles of Antiquity</h1>
+        <div class="audio-control">
+            <span>🎵 Music Loop</span>
+            <label class="switch">
+                <input type="checkbox" id="audioToggle">
+                <span class="slider"></span>
+            </label>
+        </div>
+    </header>
+
+    <main id="game-window">
+        <!-- SCREEN 1: Welcome Intro -->
+        <div id="screen-intro" class="screen active center-content">
+            <h2 style="color: var(--primary-color); margin-bottom: 15px;">Welcome to Ancient Society!</h2>
+            <p>Imagine you have traveled back in time. You have absolutely <strong>no control</strong> over where or into what status you are born. Your birthplace and social class will instantly decide your legal rights, education, career path, and human freedom.</p>
+            <blockquote>Will you thrive... or merely survive?</blockquote>
+            <button class="primary-btn" onclick="goToScreen('screen-civ')">➡️ Begin Adventure</button>
+        </div>
+
+        <!-- SCREEN 2: Choose Civilization -->
+        <div id="screen-civ" class="screen center-content">
+            <h2>Step 1: Choose Your World</h2>
+            <p>Select which great ancient powerhouse you will manifest within:</p>
+            <div class="btn-grid" style="width: 100%; max-width: 500px;">
+                <button onclick="selectCiv('Greece')">🛡️ Ancient Greece (Athens)</button>
+                <button onclick="selectCiv('Rome')">🏛️ Ancient Rome</button>
+            </div>
+        </div>
+
+        <!-- SCREEN 3: Wheel of Fate -->
+        <div id="screen-wheel" class="screen center-content">
+            <h2>The Wheel of Fate</h2>
+            <p>In antiquity, your social status was entirely a roll of the cosmic dice. Spin the Wheel to uncover your identity in <span id="fate-civ-name" style="font-weight: bold; color: var(--primary-color)"></span>!</p>
+            
+            <div class="wheel-container">
+                <div class="wheel-pointer"></div>
+                <div id="fate-wheel" class="wheel"></div>
+            </div>
+
+            <button id="spin-btn" class="primary-btn" onclick="spinWheel()">🎰 Spin Your Fate</button>
+            <h3 id="fate-result" style="margin-top: 20px; color: var(--primary-color);"></h3>
+            <button id="fate-continue-btn" style="display:none; margin-top: 15px;" onclick="loadRoleTimeline()">Step Into Your Shoes ➡️</button>
+        </div>
+
+        <!-- SCREEN 4: Core Gameplay Template -->
+        <div id="screen-gameplay" class="screen">
+            <div class="stats-bar">
+                <div class="stat">🌍 Civ: <span id="stat-civ">-</span></div>
+                <div class="stat">🎭 Class: <span id="stat-role">-</span></div>
+                <div class="stat">✨ Influence: <span id="stat-influence">0</span></div>
+            </div>
+
+            <h2 id="gameplay-title" style="margin-bottom: 10px;"></h2>
+            <p id="gameplay-text"></p>
+
+            <div id="history-trigger-box"></div>
+
+            <div id="choice-buttons" class="btn-grid"></div>
+        </div>
+
+        <!-- SCREEN 5: Reflection Work Sheet -->
+        <div id="screen-reflection" class="screen">
+            <h2>📜 Historical Evaluation & Reflection</h2>
+            <p>Your journey concludes here. Review your life's final status matrix. Copy or capture your thoughts below for your teacher's grading ledger:</p>
+            
+            <div class="stats-bar" style="background: #eef8ff;">
+                <div id="final-summary" style="padding: 10px; font-size: 1.05rem;"></div>
+            </div>
+
+            <label><strong>1. How did your assigned social class systematically limit or empower your choices?</strong></label>
+            <textarea placeholder="Write your historical observations here..."></textarea>
+
+            <label><strong>2. Based on your path, was this society fair? Use one historical rule or event you encountered as proof.</strong></label>
+            <textarea placeholder="Write your historical observations here..."></textarea>
+
+            <button class="primary-btn" style="margin-top: 15px;" onclick="location.reload()">🔄 Restart Chronicle</button>
+        </div>
+    </main>
+
+    <!-- Hidden History Facts Modals Container -->
+    <div id="history-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <h3 style="color: var(--primary-color); margin-bottom: 10px;">🏺 Hidden History Card Discovered!</h3>
+            <p id="modal-fact-text"></p>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA OBJECT FOR CYOA PATHS ---
+        const gameData = {
+            Greece: {
+                roles: ['Citizen', 'Woman', 'Metic', 'Slave'],
+                start: {
+                    Citizen: {
+                        title: "Born an Athenian Male Citizen",
+                        text: "Congratulations! You belong to the political core of Athens. You are free, can hold real estates, vote directly, and guide the democracy. Today, the great Ekklēsia (Assembly) is gathering to pass sweeping laws.",
+                        choices: [
+                            { text: "🏛️ Travel down to attend & vote", next: "citizen_attend" },
+                            { text: "🏡 Stay home to manage your farm", next: "citizen_home" }
+                        ]
+                    },
+                    Woman: {
+                        title: "Born an Athenian Woman",
+                        text: "You belong to a well-known family, but because you are female, you possess no structural political rights. You cannot buy substantial property or join the Assembly. Your life centers purely on the *Oikos* (the home household). You hear men debating politics outside.",
+                        choices: [
+                            { text: "🥷 Risk sneaking into the Assembly disguised", next: "woman_sneak" },
+                            { text: "🧵 Maintain the household & weave textiles", next: "woman_home" }
+                        ]
+                    },
+                    Metic: {
+                        title: "Born a Metic (Foreigner)",
+                        text: "You are a skilled trader originally from another city-state. Your merchant enterprise flourishes, making you quite prosperous, but Athenian statutory law completely locks you out of citizenship and land rights.",
+                        choices: [
+                            { text: "🗳️ Attempt to sneak into local voting booths", next: "metic_vote" },
+                            { text: "🏺 Focus strictly on expanding your pottery trade", next: "metic_respect" }
+                        ]
+                    },
+                    Slave: {
+                        title: "Born into Bondage",
+                        text: "You are the property of a wealthy silver mine operator. You have zero legal agency or civic protections. Your owner offers a tiny spark of hope: extreme loyalty and high output could earn your eventual emancipation.",
+                        choices: [
+                            { text: "🏃 Attempt a high-risk escape tonight", next: "slave_escape" },
+                            { text: "⛏️ Put your head down and work hard", next: "slave_work" }
+                        ]
+                    }
+                },
+                nodes: {
+                    // Citizen branching
+                    citizen_attend: {
+                        title: "The Assembly Dynamic",
+                        text: "You delivered an eloquent speech regarding navy allocations. The citizen body cheers! You effectively passed a major piece of sovereign legislation.",
+                        influence: 10,
+                        fact: "🏺 Did You Know? In Athens, only about 10–20% of the entire population were full male citizens who could actively cast political votes.",
+                        choices: [{ text: "Proceed to Wartime crisis ➡️", next: "greece_war" }]
+                    },
+                    citizen_home: {
+                        title: "Quiet Isolation",
+                        text: "You enjoyed a relaxing day at home, but missed crucial historic ballots. Other factions seized control of the legislation.",
+                        influence: -5,
+                        choices: [{ text: "Proceed to Wartime crisis ➡️", next: "greece_war" }]
+                    },
+                    greece_war: {
+                        title: "The Trumpet Sounds: War!",
+                        text: "A hostile fleet threatens the Aegean Sea. As an able citizen, duty calls you to the hoplite shield walls. What is your choice?",
+                        choices: [
+                            { text: "⚔️ March out to fight bravely", next: "greece_war_fight" },
+                            { text: "💰 Pay a mercenary substitute to take your place", next: "greece_war_pay" }
+                        ]
+                    },
+                    greece_war_fight: {
+                        title: "War Hero",
+                        text: "Your phalanx held the defensive lines! You return home safely wrapped in massive public admiration and prestige.",
+                        influence: 15,
+                        choices: [{ text: "Claim your legacy ➡️", next: "end_influential" }]
+                    },
+                    greece_war_pay: {
+                        title: "Wealthy but Scorned",
+                        text: "You preserved your physical well-being, but your peers label you a coward in the public square.",
+                        influence: -10,
+                        choices: [{ text: "Claim your legacy ➡️", next: "end_merchant" }]
+                    },
+                    // Woman branching
+                    woman_sneak: {
+                        title: "Ejected from the Pnyx",
+                        text: "Guards easily spot you out of the crowd. You are publicly humiliated and escorted away. Women are completely barred from civic processes.",
+                        influence: -5,
+                        choices: [{ text: "See your final fate ➡️", next: "end_difficult" }]
+                    },
+                    woman_home: {
+                        title: "Pillar of the Household",
+                        text: "You preserved your house's internal economy flawlessly, protecting your children's long-term legacy.",
+                        influence: 5,
+                        choices: [{ text: "See your final fate ➡️", next: "end_difficult" }]
+                    },
+                    // Metic branching
+                    metic_vote: {
+                        title: "Discovered and Fined",
+                        text: "The registry monitors immediately know you are a foreign Metic. You are blocked from the ballot and heavily fined for disrupting democratic sanctity.",
+                        influence: -10,
+                        choices: [{ text: "See your final fate ➡️", next: "end_merchant" }]
+                    },
+                    metic_respect: {
+                        title: "Prosperous Merchant Paths",
+                        text: "Your maritime cargo ships return safely filled with grains and Egyptian spices. Your treasury overflows, even without political rights.",
+                        influence: 15,
+                        choices: [{ text: "See your final fate ➡️", next: "end_merchant" }]
+                    },
+                    // Slave branching
+                    slave_escape: {
+                        title: "Captured in Flight",
+                        text: "Bounty trackers corner you at the border. You are dragged back in chains, and your manual labor duties become significantly harder.",
+                        influence: -15,
+                        choices: [{ text: "See your final fate ➡️", next: "end_difficult" }]
+                    },
+                    slave_work: {
+                        title: "The Gift of Freedom",
+                        text: "Impressed by your consistent service over decades, your master signs legal documents granting you your freedom. You step out as a Freeman!",
+                        influence: 10,
+                        fact: "⚖️ Athenian Freedmen still couldn't vote, but they could no longer be legally bought or sold by masters.",
+                        choices: [{ text: "See your final fate ➡️", next: "end_freedman" }]
+                    }
+                }
+            },
+            Rome: {
+                roles: ['Patrician', 'Plebeian', 'Slave'],
+                start: {
+                    Patrician: {
+                        title: "Born an Elite Patrician",
+                        text: "You open your eyes inside a beautiful marble estate. Your ancestors were original founders of Rome. You automatically hold wealth, supreme religious rights, and a fast track to the Roman Senate.",
+                        choices: [
+                            { text: "🏛️ Run for Magisterial Office", next: "patrician_run" },
+                            { text: "🍇 Ignore volatile politics to manage your massive villas", next: "patrician_ignore" }
+                        ]
+                    },
+                    Plebeian: {
+                        title: "Born a Working Plebeian",
+                        text: "You are a free Roman citizen—a baker, farmer, or craftsman. You make up the working backbone of Rome. However, wealthy Patricians manipulate the legal courts and dominate the ultimate halls of power.",
+                        choices: [
+                            { text: "📣 Strike with other Plebeians in the Conflict of the Orders", next: "pleb_protest" },
+                            { text: "🍞 Remain silent and focus on baking rations", next: "pleb_silent" }
+                        ]
+                    },
+                    Slave: {
+                        title: "Born a Roman Slave",
+                        text: "You are owned by an ambitious Roman politician. You work long, tireless hours preparing complex banquets and maintaining clean baths. One day, you overhear secret plans regarding a gladiator revolt.",
+                        choices: [
+                            { text: "⚔️ Attempt to escape and join the slave uprising", next: "rome_slave_escape" },
+                            { text: "🍷 Serve your master with unwavering reliability", next: "rome_slave_serve" }
+                        ]
+                    }
+                },
+                nodes: {
+                    patrician_run: {
+                        title: "Elected as a Senator",
+                        text: "Your family funding pays off. You are elected Senator! You now wear the purple-bordered toga and direct the foreign policy of the Republic.",
+                        influence: 20,
+                        choices: [{ text: "See your final evaluation ➡️", next: "end_influential" }]
+                    },
+                    patrician_ignore: {
+                        title: "Luxurious Landlord",
+                        text: "You avoided dangerous political stabbings and grew immensely rich off agricultural exports.",
+                        influence: 5,
+                        choices: [{ text: "See your final evaluation ➡️", next: "end_merchant" }]
+                    },
+                    pleb_protest: {
+                        title: "Power to the Masses",
+                        text: "Your historic boycott forces Patricians to compromise! They establish the 'Tribune of the Plebs' to veto unfair laws.",
+                        influence: 15,
+                        fact: "🦅 Historical Fact: The Conflict of the Orders was a real series of political strikes where Plebeians successfully won protection under written Law (The 12 Tables).",
+                        choices: [{ text: "See your final evaluation ➡️", next: "end_freedman" }]
+                    },
+                    pleb_silent: {
+                        title: "Status Quo Maintained",
+                        text: "You stayed safe in your shop, but elite families passed laws that cut deeper into your daily wages.",
+                        influence: -5,
+                        choices: [{ text: "See your final evaluation ➡️", next: "end_difficult" }]
+                    },
+                    rome_slave_escape: {
+                        title: "Crushed by Legions",
+                        text: "The rebellion is unfortunately caught out by elite Roman military units. Survival is brutal, and you are returned to hard labor.",
+                        influence: -20,
+                        choices: [{ text: "See your final evaluation ➡️", next: "end_difficult" }]
+                    },
+                    rome_slave_serve: {
+                        title: "Manumission Granted",
+                        text: "Your master rewards your steady dedication by granting you formal Manumission. You are officially an open Roman citizen!",
+                        influence: 10,
+                        fact: "⚖️ In Rome, freed slaves could actually become citizens with the right to vote, a major difference from Athenian systems.",
+                        choices: [{ text: "See your final evaluation ➡️", next: "end_freedman" }]
+                    }
+                }
+            }
+        };
+
+        const endings = {
+            end_influential: { title: "🏆 Ending: An Elite and Influential Leader!", text: "You stood at the pinnacle of ancient society. Your life was filled with luxurious protection and power, all because of your fortunate birth conditions." },
+            end_merchant: { title: "💰 Ending: A Prosperous Merchant / Estate Owner", text: "You amassed plenty of money and physical goods, yet structural laws kept you safe but slightly isolated from absolute state rule." },
+            end_freedman: { title: "🌟 Ending: A Resilient, Self-Made Citizen", text: "You fought hard against structural systemic obstacles or earned freedom from bondage. You survived against the odds, though some social stigmas linger." },
+            end_difficult: { title: "⛓️ Ending: A Challenging Path of Hard Survival", text: "Your social position strictly minimized your basic opportunities. Your daily life was defined by serving others with almost zero structural rights." }
+        };
+
+        // --- GAME STATE VARIABLES ---
+        let state = {
+            currentCiv: "",
+            currentRole: "",
+            influence: 0
+        };
+
+        // --- WEB AUDIO API BACKGROUND MUSIC GENERATOR ---
+        let audioCtx = null;
+        let oscillator = null;
+        let gainNode = null;
+        let audioInterval = null;
+
+        function initAudio() {
+            if (audioCtx) return;
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            
+            // Generate a smooth ambient synthesizer chord progression
+            gainNode = audioCtx.createGain();
+            gainNode.gain.setValueAtTime(0.08, audioCtx.currentTime); // Low background volume
+            gainNode.connect(audioCtx.destination);
+            
+            let notes = [220.00, 261.63, 293.66, 329.63]; // Melancholic Ancient Drone A-C-D-E
+            let index = 0;
+
+            audioInterval = setInterval(() => {
+                if (!audioCtx || audioCtx.state === 'suspended') return;
+                
+                let osc = audioCtx.createOscillator();
+                let oscGain = audioCtx.createGain();
+                
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(notes[index], audioCtx.currentTime);
+                
+                oscGain.gain.setValueAtTime(0, audioCtx.currentTime);
+                oscGain.gain.linearRampToValueAtTime(0.08, audioCtx.currentTime + 1.5);
+                oscGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 4);
+                
+                osc.connect(oscGain);
+                oscGain.connect(audioCtx.destination);
+                
+                osc.start();
+                osc.stop(audioCtx.currentTime + 4);
+                
+                index = (index + 1) % notes.length;
+            }, 3000);
+        }
+
+        document.getElementById('audioToggle').addEventListener('change', function(e) {
+            if (e.target.checked) {
+                if (!audioCtx) initAudio();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+            } else {
+                if (audioCtx) audioCtx.suspend();
+            }
+        });
+
+        // --- UI NAVIGATION LOGIC ---
+        function goToScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function selectCiv(civ) {
+            state.currentCiv = civ;
+            document.getElementById('fate-civ-name').innerText = civ === 'Greece' ? 'Ancient Greece (Athens)' : 'Ancient Rome';
+            goToScreen('screen-wheel');
+        }
+
+        // --- WHEEL OF FATE ANIMATION ---
+        function spinWheel() {
+            const spinBtn = document.getElementById('spin-btn');
+            spinBtn.disabled = true;
+            
+            const wheel = document.getElementById('fate-wheel');
+            // Add a dynamic spin rotation
+            const degrees = 1440 + Math.floor(Math.random() * 360);
+            wheel.style.transform = `rotate(${degrees}deg)`;
+            
+            // Calculate assigned role based on current civilization choices
+            const availableRoles = gameData[state.currentCiv].roles;
+            const chosenRole = availableRoles[Math.floor(Math.random() * availableRoles.length)];
+            state.currentRole = chosenRole;
+
+            setTimeout(() => {
+                document.getElementById('fate-result').innerHTML = `⚖️ The Fates Have Spoken!<br>You are assigned the status of: <strong>${chosenRole}</strong>`;
+                document.getElementById('fate-continue-btn').style.display = 'inline-block';
+            }, 3000); // Matches CSS transition duration
+        }
+
+        function loadRoleTimeline() {
+            state.influence = 0;
+            updateStatsUI();
+            renderNode(gameData[state.currentCiv].start[state.currentRole]);
+            goToScreen('screen-gameplay');
+        }
+
+        // --- RENDER DYNAMIC STORY PATH SYSTEM ---
+        function renderNode(nodeData) {
+            document.getElementById('gameplay-title').innerText = nodeData.title;
+            document.getElementById('gameplay-text').innerText = nodeData.text;
+
+            // Handle optional Fact items (Hidden History Cards)
+            const triggerBox = document.getElementById('history-trigger-box');
+            triggerBox.innerHTML = "";
+            if (nodeData.fact) {
+                const card = document.createElement('div');
+                card.className = "history-card-trigger";
+                card.innerHTML = "🏺 <em>Click to inspect a Hidden Fact Card about this choice...</em>";
+                card.onclick = () => showModal(nodeData.fact);
+                triggerBox.appendChild(card);
+            }
+
+            // Populate choice selections
+            const optionsContainer = document.getElementById('choice-buttons');
+            optionsContainer.innerHTML = "";
+            
+            nodeData.choices.forEach(c => {
+                const b = document.createElement('button');
+                b.innerText = c.text;
+                b.onclick = () => handleChoice(c.next);
+                optionsContainer.appendChild(b);
+            });
+        }
+
+        function handleChoice(nextNodeKey) {
+            // Check if next key points to a systemic final ending
+            if (endings[nextNodeKey]) {
+                triggerFinalEnding(endings[nextNodeKey]);
+                return;
+            }
+
+            const nextNode = gameData[state.currentCiv].nodes[nextNodeKey];
+            if (nextNode) {
+                if (nextNode.influence) {
+                    state.influence += nextNode.influence;
+                    updateStatsUI();
+                }
+                renderNode(nextNode);
+            }
+        }
+
+        function updateStatsUI() {
+            document.getElementById('stat-civ').innerText = state.currentCiv;
+            document.getElementById('stat-role').innerText = state.currentRole;
+            document.getElementById('stat-influence').innerText = state.influence;
+        }
+
+        function triggerFinalEnding(endingObj) {
+            goToScreen('screen-reflection');
+            document.getElementById('final-summary').innerHTML = `
+                <strong>Civilization:</strong> ${state.currentCiv} | 
+                <strong>Assigned Path:</strong> ${state.currentRole} | 
+                <strong>Final Influence Score:</strong> ${state.influence}<br><br>
+                <strong>${endingObj.title}</strong><br>${endingObj.text}
+            `;
+        }
+
+        // --- MODAL UTILITIES ---
+        function showModal(text) {
+            document.getElementById('modal-fact-text').innerText = text;
+            document.getElementById('history-modal').style.display = 'flex';
+        }
+        function closeModal() {
+            document.getElementById('history-modal').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
